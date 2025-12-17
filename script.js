@@ -4,7 +4,8 @@ const state = {
     tasks: [],
     currentNote: null,
     currentView: 'all-notes',
-    searchQuery: ''
+    searchQuery: '',
+    currentBlockMenu: null
 };
 
 // DOM Elements
@@ -26,12 +27,15 @@ const newNoteBtn = document.getElementById('newNoteBtn');
 const backBtn = document.getElementById('backBtn');
 const noteTitle = document.getElementById('noteTitle');
 const editorContent = document.getElementById('editorContent');
+const blockMenu = document.getElementById('blockMenu');
 const contextMenu = document.getElementById('contextMenu');
 const toast = document.getElementById('toast');
 const navItems = document.querySelectorAll('.nav-item');
 const appTitle = document.querySelector('.app-title');
 const tasksList = document.getElementById('tasksList');
 const addTaskBtn = document.getElementById('addTaskBtn');
+
+let blockIdCounter = 0;
 
 // Initialize App
 function init() {
@@ -58,7 +62,18 @@ function loadFromStorage() {
         state.notes = [{
             id: Date.now(),
             title: 'Welcome to Notes! 👋',
-            content: 'This is your first note. Tap to edit or long-press for more options.\n\nSwipe from the left edge to open the menu. Tap the + button to create new notes.\n\nStart capturing your thoughts!',
+            blocks: [
+                { id: 1, type: 'text', content: 'This is your first note. Tap the + button on the left to add different types of content blocks.' },
+                { id: 2, type: 'heading2', content: 'Block-Based Editor' },
+                { id: 3, type: 'text', content: 'Just like Notion, each line is a separate block. Tap + to insert:' },
+                { id: 4, type: 'list', content: 'Text paragraphs' },
+                { id: 5, type: 'list', content: 'Headings (H1, H2, H3)' },
+                { id: 6, type: 'list', content: 'To-do lists' },
+                { id: 7, type: 'list', content: 'Tables' },
+                { id: 8, type: 'list', content: 'Quotes and dividers' },
+                { id: 9, type: 'heading2', content: 'Gestures' },
+                { id: 10, type: 'text', content: 'Swipe from the left to open the menu. Long-press any note card for quick actions.' }
+            ],
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
         }];
@@ -95,7 +110,22 @@ function setupEventListeners() {
     // Editor
     backBtn.addEventListener('click', closeEditor);
     noteTitle.addEventListener('input', saveCurrentNote);
-    editorContent.addEventListener('input', saveCurrentNote);
+
+    // Block menu options
+    document.querySelectorAll('.block-option').forEach(option => {
+        option.addEventListener('click', () => {
+            const type = option.dataset.type;
+            insertBlock(type, state.currentBlockMenu);
+            hideBlockMenu();
+        });
+    });
+
+    // Close block menu when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!blockMenu.contains(e.target) && !e.target.closest('.block-handle')) {
+            hideBlockMenu();
+        }
+    });
 
     // Close context menu when clicking outside
     document.addEventListener('click', (e) => {
@@ -104,20 +134,15 @@ function setupEventListeners() {
         }
     });
 
-    // Tasks
-    addTaskBtn.addEventListener('click', createNewTask);
-
-    // Toolbar buttons
-    document.querySelectorAll('.toolbar-btn').forEach(btn => {
-        btn.addEventListener('click', () => handleToolbarAction(btn.dataset.action));
-    });
-
     // Close sidebar when clicking on main content
     mainContent.addEventListener('click', (e) => {
         if (sidebar.classList.contains('active') && !e.target.closest('.menu-btn')) {
             toggleSidebar();
         }
     });
+
+    // Tasks
+    addTaskBtn.addEventListener('click', createNewTask);
 }
 
 // Gesture Controls
@@ -267,7 +292,9 @@ function createNewNote() {
     const note = {
         id: Date.now(),
         title: '',
-        content: '',
+        blocks: [
+            { id: Date.now(), type: 'text', content: '' }
+        ],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
     };
@@ -282,7 +309,8 @@ function createNewNote() {
 function openEditor(note) {
     state.currentNote = note;
     noteTitle.value = note.title;
-    editorContent.innerHTML = note.content.replace(/\n/g, '<br>');
+
+    renderBlocks();
 
     notesView.classList.add('hidden');
     editorView.classList.remove('hidden');
@@ -291,7 +319,7 @@ function openEditor(note) {
 
 function closeEditor() {
     // Remove empty notes
-    if (!state.currentNote.title && !state.currentNote.content) {
+    if (!state.currentNote.title && (!state.currentNote.blocks || state.currentNote.blocks.every(b => !b.content))) {
         state.notes = state.notes.filter(n => n.id !== state.currentNote.id);
     }
 
@@ -309,7 +337,6 @@ function closeEditor() {
 function saveCurrentNote() {
     if (state.currentNote) {
         state.currentNote.title = noteTitle.value;
-        state.currentNote.content = editorContent.innerText;
         state.currentNote.updatedAt = new Date().toISOString();
 
         // Debounced save
@@ -334,6 +361,7 @@ function duplicateNote(noteId) {
             ...note,
             id: Date.now(),
             title: note.title + ' (Copy)',
+            blocks: note.blocks.map(b => ({ ...b, id: Date.now() + Math.random() })),
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
         };
@@ -344,16 +372,374 @@ function duplicateNote(noteId) {
     }
 }
 
+// Block System
+function renderBlocks() {
+    if (!state.currentNote || !state.currentNote.blocks) {
+        state.currentNote.blocks = [{ id: Date.now(), type: 'text', content: '' }];
+    }
+
+    editorContent.innerHTML = '';
+
+    state.currentNote.blocks.forEach((block, index) => {
+        const blockEl = createBlockElement(block, index);
+        editorContent.appendChild(blockEl);
+    });
+
+    // Focus first block if new note
+    if (state.currentNote.blocks.length === 1 && !state.currentNote.blocks[0].content) {
+        const firstInput = editorContent.querySelector('.block-input');
+        if (firstInput) {
+            setTimeout(() => firstInput.focus(), 100);
+        }
+    }
+}
+
+function createBlockElement(block, index) {
+    const blockEl = document.createElement('div');
+    blockEl.className = 'block';
+    blockEl.dataset.type = block.type;
+    blockEl.dataset.blockId = block.id;
+
+    // Add handle (+ button)
+    const handle = document.createElement('button');
+    handle.className = 'block-handle';
+    handle.innerHTML = '+';
+    handle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        showBlockMenu(block.id);
+    });
+    blockEl.appendChild(handle);
+
+    // Add content based on type
+    const content = document.createElement('div');
+    content.className = 'block-content';
+
+    switch(block.type) {
+        case 'text':
+        case 'heading1':
+        case 'heading2':
+        case 'heading3':
+        case 'quote':
+        case 'list':
+        case 'numbered':
+            content.appendChild(createTextInput(block, index));
+            break;
+        case 'checklist':
+            content.appendChild(createChecklistBlock(block));
+            break;
+        case 'divider':
+            const divider = document.createElement('div');
+            divider.className = 'block-divider';
+            content.appendChild(divider);
+            break;
+        case 'table':
+            content.appendChild(createTableBlock(block));
+            break;
+    }
+
+    if (block.type === 'numbered') {
+        content.dataset.number = index + 1;
+    }
+
+    blockEl.appendChild(content);
+
+    return blockEl;
+}
+
+function createTextInput(block, index) {
+    const textarea = document.createElement('textarea');
+    textarea.className = 'block-input';
+    textarea.value = block.content || '';
+    textarea.placeholder = getPlaceholder(block.type);
+    textarea.rows = 1;
+
+    // Auto-resize
+    textarea.addEventListener('input', (e) => {
+        autoResize(textarea);
+        updateBlockContent(block.id, textarea.value);
+    });
+
+    // Handle Enter key
+    textarea.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            const blockIndex = state.currentNote.blocks.findIndex(b => b.id === block.id);
+            insertBlockAfter(blockIndex, 'text');
+        } else if (e.key === 'Backspace' && textarea.value === '' && state.currentNote.blocks.length > 1) {
+            e.preventDefault();
+            deleteBlock(block.id);
+        }
+    });
+
+    // Set initial height
+    setTimeout(() => autoResize(textarea), 0);
+
+    return textarea;
+}
+
+function createChecklistBlock(block) {
+    const container = document.createElement('div');
+    container.style.display = 'flex';
+    container.style.alignItems = 'flex-start';
+    container.style.gap = '12px';
+    container.style.width = '100%';
+
+    const checkbox = document.createElement('div');
+    checkbox.className = 'block-checkbox';
+    if (block.checked) {
+        checkbox.classList.add('checked');
+    }
+
+    checkbox.addEventListener('click', () => {
+        block.checked = !block.checked;
+        checkbox.classList.toggle('checked');
+        textarea.classList.toggle('completed', block.checked);
+        saveToStorage();
+    });
+
+    const textarea = document.createElement('textarea');
+    textarea.className = 'block-input';
+    if (block.checked) {
+        textarea.classList.add('completed');
+    }
+    textarea.value = block.content || '';
+    textarea.placeholder = 'To-do';
+    textarea.rows = 1;
+
+    textarea.addEventListener('input', (e) => {
+        autoResize(textarea);
+        updateBlockContent(block.id, textarea.value);
+    });
+
+    textarea.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            const blockIndex = state.currentNote.blocks.findIndex(b => b.id === block.id);
+            insertBlockAfter(blockIndex, 'checklist');
+        } else if (e.key === 'Backspace' && textarea.value === '' && state.currentNote.blocks.length > 1) {
+            e.preventDefault();
+            deleteBlock(block.id);
+        }
+    });
+
+    setTimeout(() => autoResize(textarea), 0);
+
+    container.appendChild(checkbox);
+    container.appendChild(textarea);
+
+    return container;
+}
+
+function createTableBlock(block) {
+    if (!block.tableData) {
+        block.tableData = {
+            rows: 3,
+            cols: 3,
+            cells: Array(3).fill().map(() => Array(3).fill(''))
+        };
+    }
+
+    const container = document.createElement('div');
+
+    const table = document.createElement('table');
+    table.className = 'block-table';
+
+    for (let i = 0; i < block.tableData.rows; i++) {
+        const row = table.insertRow();
+        for (let j = 0; j < block.tableData.cols; j++) {
+            const cell = row.insertCell();
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'block-table-cell';
+            input.value = block.tableData.cells[i]?.[j] || '';
+            input.placeholder = `Cell ${i + 1},${j + 1}`;
+
+            input.addEventListener('input', (e) => {
+                if (!block.tableData.cells[i]) {
+                    block.tableData.cells[i] = [];
+                }
+                block.tableData.cells[i][j] = e.target.value;
+                saveToStorage();
+            });
+
+            cell.appendChild(input);
+        }
+    }
+
+    container.appendChild(table);
+
+    const controls = document.createElement('div');
+    controls.className = 'table-controls';
+
+    const addRowBtn = document.createElement('button');
+    addRowBtn.className = 'table-btn';
+    addRowBtn.textContent = '+ Row';
+    addRowBtn.addEventListener('click', () => {
+        block.tableData.rows++;
+        block.tableData.cells.push(Array(block.tableData.cols).fill(''));
+        renderBlocks();
+    });
+
+    const addColBtn = document.createElement('button');
+    addColBtn.className = 'table-btn';
+    addColBtn.textContent = '+ Column';
+    addColBtn.addEventListener('click', () => {
+        block.tableData.cols++;
+        block.tableData.cells.forEach(row => row.push(''));
+        renderBlocks();
+    });
+
+    const removeRowBtn = document.createElement('button');
+    removeRowBtn.className = 'table-btn';
+    removeRowBtn.textContent = '- Row';
+    removeRowBtn.addEventListener('click', () => {
+        if (block.tableData.rows > 1) {
+            block.tableData.rows--;
+            block.tableData.cells.pop();
+            renderBlocks();
+        }
+    });
+
+    const removeColBtn = document.createElement('button');
+    removeColBtn.className = 'table-btn';
+    removeColBtn.textContent = '- Column';
+    removeColBtn.addEventListener('click', () => {
+        if (block.tableData.cols > 1) {
+            block.tableData.cols--;
+            block.tableData.cells.forEach(row => row.pop());
+            renderBlocks();
+        }
+    });
+
+    controls.appendChild(addRowBtn);
+    controls.appendChild(addColBtn);
+    controls.appendChild(removeRowBtn);
+    controls.appendChild(removeColBtn);
+
+    container.appendChild(controls);
+
+    return container;
+}
+
+function getPlaceholder(type) {
+    const placeholders = {
+        'text': 'Type / for blocks',
+        'heading1': 'Heading 1',
+        'heading2': 'Heading 2',
+        'heading3': 'Heading 3',
+        'quote': 'Quote',
+        'list': 'List item',
+        'numbered': 'Numbered item'
+    };
+    return placeholders[type] || 'Type something...';
+}
+
+function autoResize(textarea) {
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
+}
+
+function updateBlockContent(blockId, content) {
+    const block = state.currentNote.blocks.find(b => b.id === blockId);
+    if (block) {
+        block.content = content;
+        saveCurrentNote();
+    }
+}
+
+function insertBlock(type, afterBlockId) {
+    const index = state.currentNote.blocks.findIndex(b => b.id === afterBlockId);
+    const newBlock = {
+        id: Date.now(),
+        type: type,
+        content: ''
+    };
+
+    if (index >= 0) {
+        state.currentNote.blocks.splice(index + 1, 0, newBlock);
+    } else {
+        state.currentNote.blocks.push(newBlock);
+    }
+
+    renderBlocks();
+
+    // Focus new block
+    setTimeout(() => {
+        const blockEl = editorContent.querySelector(`[data-block-id="${newBlock.id}"] .block-input`);
+        if (blockEl) {
+            blockEl.focus();
+        }
+    }, 50);
+
+    saveToStorage();
+}
+
+function insertBlockAfter(index, type) {
+    const newBlock = {
+        id: Date.now(),
+        type: type,
+        content: ''
+    };
+
+    state.currentNote.blocks.splice(index + 1, 0, newBlock);
+    renderBlocks();
+
+    setTimeout(() => {
+        const blockEl = editorContent.querySelector(`[data-block-id="${newBlock.id}"] .block-input`);
+        if (blockEl) {
+            blockEl.focus();
+        }
+    }, 50);
+
+    saveToStorage();
+}
+
+function deleteBlock(blockId) {
+    const index = state.currentNote.blocks.findIndex(b => b.id === blockId);
+
+    if (state.currentNote.blocks.length > 1) {
+        state.currentNote.blocks = state.currentNote.blocks.filter(b => b.id !== blockId);
+        renderBlocks();
+
+        // Focus previous block
+        if (index > 0) {
+            setTimeout(() => {
+                const prevBlock = state.currentNote.blocks[index - 1];
+                const prevInput = editorContent.querySelector(`[data-block-id="${prevBlock.id}"] .block-input`);
+                if (prevInput) {
+                    prevInput.focus();
+                    prevInput.setSelectionRange(prevInput.value.length, prevInput.value.length);
+                }
+            }, 50);
+        }
+
+        saveToStorage();
+    }
+}
+
+function showBlockMenu(blockId) {
+    state.currentBlockMenu = blockId;
+    blockMenu.classList.remove('hidden');
+}
+
+function hideBlockMenu() {
+    blockMenu.classList.add('hidden');
+    state.currentBlockMenu = null;
+}
+
 // Render Notes
 function renderNotes() {
     let filteredNotes = state.notes;
 
     // Apply search filter
     if (state.searchQuery) {
-        filteredNotes = state.notes.filter(note =>
-            note.title.toLowerCase().includes(state.searchQuery) ||
-            note.content.toLowerCase().includes(state.searchQuery)
-        );
+        filteredNotes = state.notes.filter(note => {
+            const titleMatch = note.title.toLowerCase().includes(state.searchQuery);
+            const contentMatch = note.blocks?.some(b =>
+                b.content?.toLowerCase().includes(state.searchQuery)
+            );
+            return titleMatch || contentMatch;
+        });
     }
 
     if (filteredNotes.length === 0) {
@@ -370,7 +756,7 @@ function renderNotes() {
     notesGrid.innerHTML = filteredNotes.map(note => {
         const date = new Date(note.updatedAt);
         const formattedDate = formatDate(date);
-        const preview = note.content.substring(0, 100);
+        const preview = note.blocks?.map(b => b.content).filter(c => c).join(' ').substring(0, 100) || '';
 
         return `
             <div class="note-card" data-note-id="${note.id}">
@@ -494,47 +880,16 @@ function handleContextAction(action, noteId) {
         case 'share':
             const noteToShare = state.notes.find(n => n.id === noteId);
             if (noteToShare && navigator.share) {
+                const text = noteToShare.blocks?.map(b => b.content).filter(c => c).join('\n') || '';
                 navigator.share({
                     title: noteToShare.title,
-                    text: noteToShare.content
+                    text: text
                 }).catch(() => showToast('Share cancelled'));
             } else {
                 showToast('Sharing not supported');
             }
             break;
     }
-}
-
-// Toolbar Actions
-function handleToolbarAction(action) {
-    const selection = window.getSelection();
-
-    switch(action) {
-        case 'bold':
-            document.execCommand('bold');
-            break;
-        case 'italic':
-            document.execCommand('italic');
-            break;
-        case 'heading':
-            document.execCommand('formatBlock', false, '<h1>');
-            break;
-        case 'list':
-            document.execCommand('insertUnorderedList');
-            break;
-        case 'checkbox':
-            const checkbox = '☐ ';
-            document.execCommand('insertText', false, checkbox);
-            break;
-        case 'image':
-            const url = prompt('Enter image URL:');
-            if (url) {
-                document.execCommand('insertImage', false, url);
-            }
-            break;
-    }
-
-    editorContent.focus();
 }
 
 // Toast Notifications

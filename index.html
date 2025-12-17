@@ -79,26 +79,84 @@
 
             <input type="text" class="note-title" id="noteTitle" placeholder="Untitled">
 
-            <div class="editor-toolbar">
-                <button class="toolbar-btn" data-action="heading">H</button>
-                <button class="toolbar-btn" data-action="bold">B</button>
-                <button class="toolbar-btn" data-action="italic">I</button>
-                <button class="toolbar-btn" data-action="list">•</button>
-                <button class="toolbar-btn" data-action="checkbox">☐</button>
-                <button class="toolbar-btn" data-action="image">🖼</button>
+            <div class="editor-content" id="editorContent">
+                <!-- Blocks will be dynamically added here -->
             </div>
+        </div>
 
-            <div class="editor-content" id="editorContent" contenteditable="true" data-placeholder="Start typing...">
-            </div>
-
-            <div class="block-menu hidden" id="blockMenu">
-                <button class="block-option" data-type="text">📝 Text</button>
-                <button class="block-option" data-type="heading">📌 Heading</button>
-                <button class="block-option" data-type="checklist">☐ Checklist</button>
-                <button class="block-option" data-type="list">• List</button>
-                <button class="block-option" data-type="quote">❝ Quote</button>
-                <button class="block-option" data-type="divider">─ Divider</button>
-            </div>
+        <!-- Block Menu -->
+        <div class="block-menu hidden" id="blockMenu">
+            <div class="block-menu-header">Add a block</div>
+            <button class="block-option" data-type="text">
+                <span class="block-icon">📝</span>
+                <div class="block-info">
+                    <div class="block-name">Text</div>
+                    <div class="block-desc">Plain text paragraph</div>
+                </div>
+            </button>
+            <button class="block-option" data-type="heading1">
+                <span class="block-icon">H1</span>
+                <div class="block-info">
+                    <div class="block-name">Heading 1</div>
+                    <div class="block-desc">Large section heading</div>
+                </div>
+            </button>
+            <button class="block-option" data-type="heading2">
+                <span class="block-icon">H2</span>
+                <div class="block-info">
+                    <div class="block-name">Heading 2</div>
+                    <div class="block-desc">Medium section heading</div>
+                </div>
+            </button>
+            <button class="block-option" data-type="heading3">
+                <span class="block-icon">H3</span>
+                <div class="block-info">
+                    <div class="block-name">Heading 3</div>
+                    <div class="block-desc">Small section heading</div>
+                </div>
+            </button>
+            <button class="block-option" data-type="checklist">
+                <span class="block-icon">☑</span>
+                <div class="block-info">
+                    <div class="block-name">To-do list</div>
+                    <div class="block-desc">Track tasks with checkboxes</div>
+                </div>
+            </button>
+            <button class="block-option" data-type="list">
+                <span class="block-icon">•</span>
+                <div class="block-info">
+                    <div class="block-name">Bulleted list</div>
+                    <div class="block-desc">Simple bullet point list</div>
+                </div>
+            </button>
+            <button class="block-option" data-type="numbered">
+                <span class="block-icon">1.</span>
+                <div class="block-info">
+                    <div class="block-name">Numbered list</div>
+                    <div class="block-desc">Ordered list with numbers</div>
+                </div>
+            </button>
+            <button class="block-option" data-type="quote">
+                <span class="block-icon">❝</span>
+                <div class="block-info">
+                    <div class="block-name">Quote</div>
+                    <div class="block-desc">Capture a quote or callout</div>
+                </div>
+            </button>
+            <button class="block-option" data-type="divider">
+                <span class="block-icon">─</span>
+                <div class="block-info">
+                    <div class="block-name">Divider</div>
+                    <div class="block-desc">Visual separator</div>
+                </div>
+            </button>
+            <button class="block-option" data-type="table">
+                <span class="block-icon">⊞</span>
+                <div class="block-info">
+                    <div class="block-name">Table</div>
+                    <div class="block-desc">Add a simple table</div>
+                </div>
+            </button>
         </div>
 
         <!-- Tasks View -->
