@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - master
+      - claude/mobile-note-taking-app-Uhus1
   workflow_dispatch:
 
 permissions:
