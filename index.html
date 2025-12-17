@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Notes - Mobile Note Taking App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>My Space</h2>
+            <button class="close-sidebar" id="closeSidebar">×</button>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <button class="nav-item active" data-view="all-notes">
+                    <span class="icon">📄</span>
+                    <span>All Notes</span>
+                </button>
+                <button class="nav-item" data-view="tasks">
+                    <span class="icon">✓</span>
+                    <span>Tasks</span>
+                </button>
+                <button class="nav-item" data-view="calendar">
+                    <span class="icon">📅</span>
+                    <span>Calendar</span>
+                </button>
+            </div>
+
+            <div class="nav-section">
+                <h3>Quick Actions</h3>
+                <button class="nav-item" id="newNoteBtn">
+                    <span class="icon">+</span>
+                    <span>New Note</span>
+                </button>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <!-- Header -->
+        <header class="app-header">
+            <button class="menu-btn" id="menuBtn">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <h1 class="app-title">All Notes</h1>
+            <button class="search-btn" id="searchBtn">🔍</button>
+        </header>
+
+        <!-- Search Bar (Hidden by default) -->
+        <div class="search-container hidden" id="searchContainer">
+            <input type="text" class="search-input" id="searchInput" placeholder="Search notes...">
+            <button class="search-close" id="searchClose">×</button>
+        </div>
+
+        <!-- Notes Grid View -->
+        <div class="notes-view" id="notesView">
+            <div class="notes-grid" id="notesGrid">
+                <!-- Notes will be dynamically added here -->
+            </div>
+
+            <button class="fab" id="fabBtn">
+                <span>+</span>
+            </button>
+        </div>
+
+        <!-- Note Editor View -->
+        <div class="editor-view hidden" id="editorView">
+            <div class="editor-header">
+                <button class="back-btn" id="backBtn">← Back</button>
+                <button class="more-btn" id="moreBtn">⋮</button>
+            </div>
+
+            <input type="text" class="note-title" id="noteTitle" placeholder="Untitled">
+
+            <div class="editor-toolbar">
+                <button class="toolbar-btn" data-action="heading">H</button>
+                <button class="toolbar-btn" data-action="bold">B</button>
+                <button class="toolbar-btn" data-action="italic">I</button>
+                <button class="toolbar-btn" data-action="list">•</button>
+                <button class="toolbar-btn" data-action="checkbox">☐</button>
+                <button class="toolbar-btn" data-action="image">🖼</button>
+            </div>
+
+            <div class="editor-content" id="editorContent" contenteditable="true" data-placeholder="Start typing...">
+            </div>
+
+            <div class="block-menu hidden" id="blockMenu">
+                <button class="block-option" data-type="text">📝 Text</button>
+                <button class="block-option" data-type="heading">📌 Heading</button>
+                <button class="block-option" data-type="checklist">☐ Checklist</button>
+                <button class="block-option" data-type="list">• List</button>
+                <button class="block-option" data-type="quote">❝ Quote</button>
+                <button class="block-option" data-type="divider">─ Divider</button>
+            </div>
+        </div>
+
+        <!-- Tasks View -->
+        <div class="tasks-view hidden" id="tasksView">
+            <div class="tasks-header">
+                <h2>Tasks</h2>
+                <button class="add-task-btn" id="addTaskBtn">+ Add Task</button>
+            </div>
+            <div class="tasks-list" id="tasksList">
+                <!-- Tasks will be dynamically added here -->
+            </div>
+        </div>
+
+        <!-- Calendar View -->
+        <div class="calendar-view hidden" id="calendarView">
+            <div class="calendar-header">
+                <h2>Calendar</h2>
+            </div>
+            <div class="calendar-content">
+                <p class="coming-soon">Calendar view coming soon...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div class="context-menu hidden" id="contextMenu">
+        <button class="context-option" data-action="edit">✏️ Edit</button>
+        <button class="context-option" data-action="delete">🗑️ Delete</button>
+        <button class="context-option" data-action="duplicate">📋 Duplicate</button>
+        <button class="context-option" data-action="share">↗️ Share</button>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast hidden" id="toast"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
