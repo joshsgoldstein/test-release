@@ -108,14 +108,52 @@ No installation required! Simply open the app in your browser:
 3. Enter task description
 4. Tap checkbox to mark complete
 
+## Deployment
+
+This app is ready to deploy to various hosting platforms! See the [DEPLOYMENT.md](DEPLOYMENT.md) guide for detailed instructions.
+
+### Quick Start: GitHub Pages (Recommended)
+
+The repository includes a GitHub Actions workflow for automatic deployment:
+
+1. **Enable GitHub Pages:**
+   - Go to your repository on GitHub
+   - Navigate to **Settings** → **Pages**
+   - Under "Build and deployment", select **Source: GitHub Actions**
+
+2. **Push to main branch:**
+   ```bash
+   git push origin main
+   ```
+
+3. **Your site will be live at:**
+   ```
+   https://[your-username].github.io/[repository-name]/
+   ```
+
+### Other Hosting Options
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for complete guides on:
+- **GitHub Pages** - Free, integrated (already configured!)
+- **Netlify** - Auto-deploy with preview URLs
+- **Vercel** - Excellent performance
+- **Cloudflare Pages** - Global CDN
+- **Surge.sh** - Quick CLI deployment
+
 ## File Structure
 
 ```
 test-release/
-├── index.html      # Main HTML structure
-├── styles.css      # Complete styling and themes
-├── script.js       # App logic and gesture controls
-└── README.md       # This file
+├── .github/
+│   └── workflows/
+│       ├── deploy.yml                      # GitHub Pages deployment
+│       ├── deploy-netlify.yml.example      # Netlify deployment (example)
+│       └── deploy-vercel.yml.example       # Vercel deployment (example)
+├── index.html                              # Main HTML structure
+├── styles.css                              # Complete styling and themes
+├── script.js                               # App logic and gesture controls
+├── README.md                               # This file
+└── DEPLOYMENT.md                           # Deployment guide
 ```
 
 ## Technical Details
